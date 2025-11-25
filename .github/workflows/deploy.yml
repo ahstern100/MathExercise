@@ -37,6 +37,12 @@ jobs:
       - name: Build site
         run: npm run build
 
+      # **********************************************
+      # שלב בדיקה חדש: הצגת תוכן קובץ ה-index.html שנבנה
+      # **********************************************
+      - name: Show Built index.html Content
+        run: cat dist/index.html # הנחתי שתיקיית הפלט היא dist
+
       # 5. הגדרת סביבת הפריסה של Pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
