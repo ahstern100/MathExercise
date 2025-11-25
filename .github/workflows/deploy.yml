@@ -1,0 +1,61 @@
+# שם תהליך העבודה (Workflow)
+name: Deploy Static Content to Pages
+
+# הפעל את התהליך בכל פעם שיש Push לענף main/master
+on:
+  push:
+    branches: ["main", "master"] # שנה אם הענף הראשי שלך נקרא אחרת
+  # מאפשר הרצה ידנית של התהליך דרך לשונית "Actions"
+  workflow_dispatch:
+
+# הרשאות נדרשות לבנייה ופריסה (חשוב!)
+permissions:
+  contents: read # קריאת קוד המקור
+  pages: write   # הרשאה לפרסם דפי GitHub Pages
+  id-token: write # הרשאה ליצירת אסימון זהות (ID Token)
+
+# הגדרות שרת לביצוע הפריסה 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. הורדת קוד המקור
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. הגדרת Node.js (נדרש עבור npm)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # גרסת Node מומלצת
+
+      # 3. התקנת תלויות
+      - name: Install dependencies
+        run: npm install # או npm ci, אם יש לך package-lock.json
+
+      # 4. ביצוע הבנייה (הפקודה הקריטית!)
+      - name: Build site
+        run: npm run build
+
+      # 5. הגדרת סביבת הפריסה של Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # 6. העלאת תוצר הבנייה לשרת GitHub
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # שנה את path לשם התיקייה שנוצרה ע"י npm run build
+          path: 'dist' # רוב הפרויקטים של TypeScript/React/Vite משתמשים ב-dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # 7. פריסה בפועל ל-GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
